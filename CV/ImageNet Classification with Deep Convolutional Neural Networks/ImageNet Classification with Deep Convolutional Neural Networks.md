@@ -32,3 +32,4 @@
 
 ## The Architecture
 ### 1. ReLU Nonlinearity
+![image](https://github.com/user-attachments/assets/1be1cf6b-8348-4552-bb25-76166bf6e643)
