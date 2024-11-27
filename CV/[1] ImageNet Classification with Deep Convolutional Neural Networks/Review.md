@@ -73,7 +73,7 @@
 ### 5. Overall Architecture
 <center>
 	<figure>
-		<img  src="https://github.com/user-attachments/assets/d12880a3-776b-4f61-9d5f-7d5bd2499739"  width="400"  height="400"/>
+		<img  src="https://github.com/user-attachments/assets/d9dc3d32-dd4b-4e12-8033-cd490be339b0"  width="800"  height="400"/>
 			<figcaption>
 				<font size=2>
 					image caption
@@ -81,6 +81,7 @@
 		</figcaption>
 	</figure>
 </center>
+
 ## Reducing Overfitting
 
 ### 1. Data Augmentation
