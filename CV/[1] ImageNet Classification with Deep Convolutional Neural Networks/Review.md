@@ -22,8 +22,7 @@
 ## The Dataset
 -  ILSVRC에서는 ImageNet에서 1000개의 카테고리에서 각각 1000개의 이미지로 구성된 데이터셋을 활용하여, 120만 개의 training data, 5만 개의 validation data, 15만 개의 test data가 있음
 	-  ImageNet은 약 22,000개의 카테고리에 속해있는 1500만 개 이상의 labeled된 고해상도 이미지로 구성되어 있음
-
-
++
 - ImageNet의 데이터의 resolution은 바뀌는 반면, 이 모델에서의 input size는 고정되어 있으므로, image데이터를 256 by 256의 resolution으로 바꿈
 	1. Rectangular image에서 더 짧은 면의 길이를 256이 되도록 크기를 조정함
 	2. 그 사진의 중앙에서 256 by 256 크기의 patch를 crop함
@@ -32,4 +31,19 @@
 
 ## The Architecture
 ### 1. ReLU Nonlinearity
-<center><img  src="https://github.com/user-attachments/assets/1be1cf6b-8348-4552-bb25-76166bf6e643 "  width="400"  height="400"/></center>
+- 기존의 모델에서는 뉴런의 결과값 $f$를 $f(x)=tanh(x)$나 $f(x)=(1+e^{-x})^{-1}$로 모델링했지만, gradient descent를 이용한 학습에서 앞선 함수와 같은 saturating nonlinearity들은 ReLU와 같은 non-saturating nonlinearity에 비해 학습 속도가 느림을 아래의 사진을 통해 알 수 있음
+	- saturation이란 활성화함수로 특정 nonlinear function(sigmoid, tanh)을 사용해서 반복하여 학습시키면 가중치가 업데이트되지 않는 현상을 말한다. 
+	- saturating nonlinear function의 예로는 tanh, sigmoid가 있다.
+	- non-saturating nonlinear function의 예로는 ReLU가 있다.
+<center>
+	<figure>
+		<img  src="https://github.com/user-attachments/assets/1be1cf6b-8348-4552-bb25-76166bf6e643 "  width="400"  height="400"/>
+			<figcaption>
+				<font size=2>
+					위 그래프는 각각의 함수들을 이용하여 학습했을 때 	CIFAR-10데이터에서 학습 에러율이 25%까지 가는 데에 걸린 epoch 수이고, 실선은 ReLU, 점선은 tanh함수임. 약 6배 정도의 속도 차이를 보임
+				</font>
+		</figcaption>
+	</figure>
+</center>
+
+
