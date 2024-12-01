@@ -1,3 +1,4 @@
+
 # ImageNet Classification with Deep Convolutional Nerual networks
 이 논문은 2012년 University of Toronto의 Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton이 쓴 논문이며, CNN으로 ILSVRC대회에서 우수한 성적을 냈던 AlexNet에 관한 논문입니다.
 ## Abstract
@@ -59,6 +60,14 @@
 >$$ \hat X = \frac{X - E(X)}{\sigma(X)} \ $$
 >추가로 contrast normalization은 Global Contrast Normalization(GCN)과 local Contrast Normalization(LCN)으로 나뉜다. 전체 이미지에 대해서 Contrast Normalization을 해주면 GCN(feature-wise)이고, 개별 샘플에 대해서 Contrast Normalization을 해주면 LCN(sample-wise)이다.
 
+>**이 부분을 읽고 생각해본 점**
+>
+>ReLU 함수는 x=0에서 continuous하지만 differentiable하지 않다. 그렇다면 backpropagation할 때 문제가 생기진 않는가? 하는 궁금증이 들었다. 그러나 실제에서 x=0이 나오는 경우는 극히 드물기 때문에 이 부분은 무시하고 사용한다고 한다. (Numerical influence of ReLU'(0) on backpropagation 참고) 그럼에도 불구하고 ReLU의 장점을 살리면서도 모든 domain에서 미분가능한 함수가 있지 않을까 생각해봤다.
+>$$f(x)=\begin{cases}e^x-1 & x<0 \\ x &x\geq 0 \end{cases}$$
+>이 함수는 미분하면
+>$$f'(x)=\begin{cases}e^x & x<0 \\ 1 &x\geq 0 \end{cases}$$
+>이므로 모든 domain에서 differentiable하다. 이에 대해서 실험해봐야겠다.
+
 ### 2. Training on Multiple GPUs
 - 한 개의 GTX 580 GPU를 사용하여 이 모델을 훈련하는 것은 메모리상의 제약이 있음
 - 특정 layer에서 2개의 GPU가 상호작용하도록 parallelize하여 훈련함
@@ -67,8 +76,40 @@
 - 그 결과 top-1 error rates를 1.7%까지, top-5 error rates를 1.2%까지 낮췄으며, 학습 속도의 면에서도 단일 GPU를 사용한 network보다 약간 더 빨랐음
 
 ### 3. Local Response Normalization
+> **Lateral Inhibition**
+> Lateral Inhibition이란 신경생리학 용어로, 한 영역에 있는 신경세포가 상호 간 연결되어 있을 때, 흥분된 뉴런이 그 주변에 있는 뉴런들에 억제성 신경전달물질을 전달하여 그 뉴런들의 활동을 억제하려는 경향이다. Lateral Inhibition은 주변의 noise를 최소화하고, 중요한 신호들을 포착하여 감각 정보의 정확도를 높인다. Lateral Inhibition은 색채의 구별에 도움이 된다고 알려져 있다.
+
+- Local Response Normalization(이하 LRN)은 Lateral Inhibition의 매커니즘에 착안해서 만들어지며, 다음의 식을 통해 이루어짐
+$$ b^i_{x,y}=a^i_{x,y}/{\Big( k+\alpha \sum_{j=\max(0,i-\frac{n}{2})}^{\min(N-1,i+\frac{n}{2})}}(a^i_{x,y})^2\Big)^\beta $$
+- 위 식에서 $a^i_{x,y}$은 $(x,y)$의 위치에 있는 픽셀에  $i$번째 커널을 적용하여 계산된 값에 ReLU를 적용한 값임
+- $N$은 그 layer에 있는 모든 kernel의 수임
+- $k,\alpha,\beta,n$은 모두 hyperparameter임
+- $k$는 분모가 0이 되는 것을 막기 위한 값인 것 같음
+- $n$은 몇 개의 인접한 픽셀에 대하여 LRN을 시행할 것인지에 관한 hyperparameter임
+- AlexNet에서는 activation fuction으로 ReLU를 쓰고 있기 때문에, 픽셀에서의 값이 양수이면 그대로 값이 나옴. 그렇게 되면 ReLU적용 이후 Convolution layer나 pooling layer를 지날 때, 값이 매우 큰 한 픽셀에 큰 영향을 받아 값이 작은 픽셀은 무시되어 학습이 제대로 이루어지지 않을 수 있음.  그렇기 때문에 LRN으로 주변 픽셀에 대해서 normalization을 하고, pooling이나 convolution을 함.
+
+-LRN을 사용하지 않았을 때는 test error rate가 13%이고, LRN을 사용했을 때에는 test error rate가 11%로 그 효율성이 입증됨 
+
+> **이 부분을 읽고 생각해본 점**
+> 
+> 1. 왜 $\alpha,\beta$를 hyperparameter로 두었을까? $\alpha=\frac{1}{n},\beta=\frac{1}{2}$이어도 lateral inhibition의 효과는 달라지지 않지 않았을까?  LRN에서 $\alpha,\beta$의 역할이 무엇일까?
+>  $\alpha,\beta$는 모두 주변 픽셀에 대한 영향을 얼마나 고려할 것 인지에 관한 파라미터라고 생각한다. $\alpha$나 $\beta$가 클수록 주변 픽셀에 대한 영향력이 증가하여 개별 뉴런의 출력이 더 약해진다. 반대로 $\alpha$나 $\beta$가 작다면,  개별 뉴런의 출력의 영향력이 더 강해져 각 픽셀의 출력이 독립적으로 작용한다. 그렇기 때문에 적절한 $\alpha,\beta$의 값을 설정하여야 한다. LRN에서는 hyperparameter tuning이 아주 중요하게 작용할 것이라고 생각된다. 그럼에도 불구하고 비슷한 역할을 하는 hyperparameter를 왜 2개씩이나 설정하였는지에 관한 의문은 남는다.
+>  
+> 2. LRN이 과도하게 큰 activation value를 억제하기 위한 것이라면 오히려 주변 뉴런의 영향으로 이미지의 feature가 제대로 학습되지 않을 수 있다는 우려가 든다. 뉴런이 지나치게 normalize된다면 중요한 feature가 압축되거나 소실될 수도 있을 것 같다. 그렇기 때문에 normalization 정도를 바꿔가며 adaptive한 방식의 LRN을 구현하는 것도 좋을 것 같다는 생각이 든다.
 
 ### 4. Overlapping Pooling
+- Pooling layer는 같은 kernel map에 있는 뉴런과 그 주변의 뉴런들의 결과를 요약함
+- 전통적인 방식의 pooling은 겹치는 부분 없이 pooling size와 stride가 일치했음
+- Alexnet에서는 pooling size > stride로 설정하여 pooling을 할 때 겹치는 부분이 있도록함
+- 이 논문에서는 pooling size = 3, stride = 2로 함
+- overlapping pooling은 모델이 overffing되는 것을 방지함
+- 그 결과 top-1 error rates 는 0.4%만큼, top-5 error rates는 0.3%만큼 줄었음
+
+> **이 부분을 읽고 생각해본 점**
+> 
+> 1. overlap되는 부분이 많아지면 summarize하는 것의 의미가 사라지고, overlap되는 부분이 적어지면 정보 손실이 커진다. 그렇다면 pooling size와 stride는 어떻게 결정하는 것이 좋을까? pooling size와 stride도 adaptive하게 할 순 없을까?
+> 2. 앞서 data가 discrete한 경우 downsampling을 위해 pooling을 진행했다. 그렇다면 continuous한 data의 경우 어떻게 downsampling을 할까?
+> 3. AlexNet에서는 maxpooling을 사용했다. maxpooling은 다른 작은 픽셀 값을 무시하므로 정보의 손실이 크지 않은가? average pooling이나 다른 pooling이 더 효과적이지는 않은가?
 
 ### 5. Overall Architecture
 <center>
@@ -82,6 +123,41 @@
 	</figure>
 </center>
 
+- 첫 번째 layer(Conv):
+	- input size: $224\times 224\times3$ 
+	- kernel size: $11\times11\times3$
+	- kernel 개수: 96
+	- stride: 4
+	- activation: ReLU + LRN + Max pooling(overlapping pooling)
+> $$O = \frac{I-F+2P}{S}+1$$ I: 입력 feature map의 크기, F: Filter의 크기, P: padding, S: stride 이므로 첫 번째 layer를 계산해보면 input size가  $227\times 227\times3$이 되어야 함
+- 두 번째 layer(Conv):
+	- kernel size: $5\times5\times48$
+	- kernel 개수: 256
+	- activation: ReLU + LRN + Max pooling(overlapping pooling)
+- 세 번째 layer(Conv):
+	- kernel size: $3\times3\times256$
+	- kernel 개수: 384
+	- activation: ReLU
+	- 유일하게 이전 layer에서 모든 kernel map들과 연결됨 
+- 네 번째 layer(Conv):
+	- kernel size: $3\times3\times192$
+	- kernel 개수: 384
+	- activation: ReLU
+- 다섯 번째 layer(Conv):
+	- kernel size: $3\times3\times192$
+	- kernel 개수: 256
+	- activation: ReLU
+- 여섯 번째 layer(FC):
+	- Neuron 수:  4096
+	- activation: ReLU
+- 일곱 번째 layer(FC):
+	- Neuron 수:  4096
+	- activation: ReLU
+- 여덟 번째 layer(FC):
+	- Neuron 수:  1000
+	- activation: Softmax
+
+
 ## Reducing Overfitting
 
 ### 1. Data Augmentation
@@ -90,4 +166,8 @@
 
 ## Details of Learning
 
+## Results
 
+### 1. Qualitative Evaluations
+
+## Discussion 
