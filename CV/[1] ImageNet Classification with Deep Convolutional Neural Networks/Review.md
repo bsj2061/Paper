@@ -153,6 +153,7 @@ $$ b^i_{x,y}=a^i_{x,y}/{\Big( k+\alpha \sum_{j=\max(0,i-\frac{n}{2})}^{\min(N-1,
 - 일곱 번째 layer(FC):
 	- Neuron 수:  4096
 	- activation: ReLU
+	
 - 여덟 번째 layer(FC):
 	- Neuron 수:  1000
 	- activation: Softmax
@@ -161,13 +162,30 @@ $$ b^i_{x,y}=a^i_{x,y}/{\Big( k+\alpha \sum_{j=\max(0,i-\frac{n}{2})}^{\min(N-1,
 ## Reducing Overfitting
 
 ### 1. Data Augmentation
+- 크게 2가지의 방식을 사용하여 data를 늘림
+1.  patch추출과 좌우반전
 
+- $256\times256$ 크기의 이미지에서 $224\times224$ 크기의 patch들을 추출하고, 좌우반전함
+- 이렇게 되면 $32\times32\times2=2048$ 배 만큼 데이터를 늘릴 수 있음. 
+- Test 시에는 이미지의 각 모서리와 중앙 이렇게 5개의 patch를 추출하고, 좌우반전시켜 10개의 patch를 얻은 뒤 각 patch에 대한 예측 값을 평균내어 최종 결과로 산출함.
+2. Training data의 RGB값의 강도를 조절함.  
+- 다음의 식을 통해서 진행함$$I_{xy} + [\bold{p}_1,\bold{p}_2,\bold{p}_3][\alpha_1\lambda_1,\alpha_2\lambda_2,\alpha_3\lambda_3]^T \\ where \quad I_{xy}=[I_{xy}^R,I_{xy}^G,I_{xy}^B]^T $$
+- $I_{xy}$는 이미지 $(x,y)$에서의 RGB값을 의미함
+- $P_i$와 $\lambda_i$는 각각 $i$번째 eigenvector와 eigenvalue를 뜻함
+- $\alpha_i$는 $N(0,0.1^2)$에서 추출한 랜덤변수임
 ### 2. DropOut
-
+- 다양한 모델의 예측 결과들을 결합하는 것은 test error를 줄이는 데에는 성공적이지만, 비용이 너무 많이 발생함
+- **dropout**이란 hidden neuron의 출력을 0.5의 확률로 0으로 만드는 것을 의미함. 그렇게 되면 그 neuron은 forward pass와 backpropagation에 모두 기여하지 않음
+- dropout을 사용하면 특정한 뉴런에만 의존하지 않게 되기 때문에 neuron의 복잡한 co-adaptation을 줄이고, 더 robust한 feature들을 학습할 수 있음
+- 뿐만 아니라 dropout을 사용하면 model combination의 비용이 줄음
+- test 시에는 모든 neuron들의 결과값에 0.5를 곱하여 사용함
 ## Details of Learning
+- stochastic gradient descent를 사용함
+- batch size는 128이고, momentum은 0.9, weight decay는 0.0005를 사용함
+- 가중치를 업데이트하는 식은 아래의 식과 같음$$\begin{aligned} &v_{i+1}:=0.9\cdot v_i-0.0005\cdot\epsilon\cdot w_i-\epsilon\cdot{\left\langle\frac{\partial L}{\partial w}{|_w}_i\right\rangle_D}_i \\ &w_{i+1}:=w_i+v_{i+1} \end{aligned}$$
+- $i$는 iteration index, $v$는 momentum variable, $\epsilon$은 learning rate, ${\left\langle\frac{\partial L}{\partial w}{|_w}_i\right\rangle_D}_i$는 $i$번째 batch $D_i$에서 objective function을 weight인 $w$에 대하여 미분한 값의 평균임
+- 가중치는 $N(0,0.01^2)$에서 초기화시킴
+- 2, 4, 5번째 convolution layer와 hidden layer에서의 FC의 bias는 1로 초기화시켰으며, 나머지  bias는 0으로 초기화시킴
 
-## Results
-
-### 1. Qualitative Evaluations
-
-## Discussion 
+## 느낀점
+- 딥러닝으로 Computer Vision 분야에서 좋은 성적을 거두어 딥러닝의 시대를 연 AlexNet에 대한 논문을 읽고 나니, 논문에서 저자의 많은 고민들을 엿볼 수 있었다. learning time과 연산량을 포함한 computational cost를 어떻게 줄일 것인지, overfitting을 어떻게 막을 것인지, 어떻게 robust한 feature를 효율적으로 학습시킬지 등 다양한 고민을 엿볼 수 있었다. 비록 LRN과 같이 현재에는 거의 쓰이지 않는 기법들이 나오긴 하지만, 저자가 파악한 문제점과 해결방안을 생각해보면서 나라면 어떻게 했을 것인지 떠올려 볼 수 있는 좋은 기회였던 것 같다. 예전 논문이라 이해하는 데에 크게 어려움은 없었지만, Reference에 있는 다양한 논문들을 읽어보며, 이 논문에 대한 background를 탄탄히 하여 한 번 더 읽어봐야겠다는 생각이 들었다.
