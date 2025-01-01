@@ -58,7 +58,7 @@ $$p(\mathbf{v}) = \frac{\sum\limits_{\mathbf{h}}e^{-E(\mathbf{v},\mathbf{h})}}{\
 - $\sigma_i$를 학습시키는 것이 가능하긴 하지만 binary hidden unit으로는 어려움([Geoffry hinton 강의 참고](https://www.youtube.com/watch?v=SnbfQwJLNk8))
 - 따라서 데이터를 평균이 0, 분산이 단위 분산이 되도록 nomalize하고, reconstruction시에  $\sigma_i^2$이 1이 되도록 하여 noise-free reconstruction을 사용함
 
-- 그러면 $v_i=\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
+- 그러면 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
 
 ## Rectified Linear Units
 - hidden unit에서 더 많은 정보를 표현하기 위해 binomial unit을 도입함 (N개의 같은 가중치와 편향을 공유하는 binary unit을 합친 것으로 볼 수 있음)
@@ -77,9 +77,17 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 - 이를 해결하기 위해서 logistic sigmoid 함수의 빠른 근사인 Noisy Rectified Linear Unit(NReLU, $\max(0, x+N(0,\sigma(x)))$)를 사용함
 
 ## Intensity Equivariance
+- Intensity Equivariance는 ReLU의 장점 중 하나임
+- Equivariance와 Invariace에 대한 설명은 [Equivariance vs Invariance](https://jrc-park.tistory.com/312)에 잘 나와있음
 
+- $x<0$에서 ReLU의 값은 $0$이므로 $\alpha$를 곱해도 그대로 $0$이고, ReLU가 zero biases를 갖고 noise-free이므로 $x>0$에서 이미지에 $\alpha>0$만큼 곱한 값은 원래의 결과에 $\alpha$만큼 곱한 값으로 나옴 ($f(\alpha x) = \alpha f(x)$)
+- 즉, ReLU는 binary unit과 다르게 Intensity Equivariant함
+- 여기에 intensity invariant한 cosine similarity를 적용함
+  Cosine Similarity$(\alpha x,\alpha y)$ = Cosine Similarity$(x,y)$
+- 따라서 이미지의 intensity에 $\alpha$만큼 곱해져도 결과가 변하지 않기 때문에 밝기나 조명에 의해 결과가 달라지지 않고, intensity의 변화에 더 강건한 feature vector 비교가 가능함
 ## Empirical Evaluation
-
+- Jittered-Cluttered NORM 데이터셋에 대한 객체 인식과 Labeled Faces in the Wild 데이터셋에 대한 face verification을 binary hidden unit과 NReLU에 대해서 각각 평가를 진행함
+- 두 데이터셋 모두 binary hidden unit보다 NReLU가 더 뛰어난 성능을 보임
 ## Jittered-Cluttered NORB
 
 ## Labeled Faces in the Wild
