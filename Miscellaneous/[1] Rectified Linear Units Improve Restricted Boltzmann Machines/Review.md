@@ -58,7 +58,7 @@ $$p(\mathbf{v}) = \frac{\sum\limits_{\mathbf{h}}e^{-E(\mathbf{v},\mathbf{h})}}{\
 - $\sigma_i$를 학습시키는 것이 가능하긴 하지만 binary hidden unit으로는 어려움([Geoffry hinton 강의 참고](https://www.youtube.com/watch?v=SnbfQwJLNk8))
 - 따라서 데이터를 평균이 0, 분산이 단위 분산이 되도록 nomalize하고, reconstruction시에  $\sigma_i^2$이 1이 되도록 하여 noise-free reconstruction을 사용함
 
-- 그러면 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
+- 그러면 $v_i=\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
 
 ## Rectified Linear Units
 - hidden unit에서 더 많은 정보를 표현하기 위해 binomial unit을 도입함 (N개의 같은 가중치와 편향을 공유하는 binary unit을 합친 것으로 볼 수 있음)
