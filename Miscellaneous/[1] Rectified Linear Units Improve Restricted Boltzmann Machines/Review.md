@@ -42,30 +42,40 @@ $$p(h_j = 1)=\frac{1}{1+\exp(-b_j-\sum_{i\in vis}v_iw_{ij})}$$임
 
 - 앞서 구한 hidden state의 configuration을 통해 reconstruction을 구할 수 있는데, 각각의 pixel이 1이 될 확률(켜질 확률)은 $$p(h_j = 1)=\frac{1}{1+\exp(-b_i-\sum_{i\in hid}h_jw_{ij})}$$임
 - RBM과 같은 에너지 기반 네트워크 모델은 학습이 잘 되었는지를 평가할 때, 에너지를 사용하며 그 식은 다음과 같음
-$$E(\bold{v},\bold{h})=-\sum\limits_{i,j}{v_ih_jw_{ij}-\sum\limits_{i}{v_ib_i}-\sum\limits_j{h_jb_j}}$$
+$$E(\mathbf{v},\mathbf{h})=-\sum\limits_{i,j}{v_ih_jw_{ij}-\sum\limits_{i}{v_ib_i}-\sum\limits_j{h_jb_j}}$$
 - 에너지가 낮을수록 학습이 잘 된 것임
 - 이렇게 학습된 RBM의 확률분포는 다음과 같음
-$$p(\bold{v}) = \frac{\sum\limits_{\bold{h}}e^{-E(\bold{v},\bold{h})}}{\sum\limits_{\bold{u},\bold{g}}e^{-E(\bold{u},\bold{g})}}$$
-- 여기에서 $\bold{u},\bold{g}$는 각각 visible, hidden layer의 가능한 모든 이진 상태를 나타내는 듯함 
+$$p(\mathbf{v}) = \frac{\sum\limits_{\mathbf{h}}e^{-E(\mathbf{v},\mathbf{h})}}{\sum\limits_{\mathbf{u},\mathbf{g}}e^{-E(\mathbf{u},\mathbf{g})}}$$
+- 여기에서 $\mathbf{u},\mathbf{g}$는 각각 visible, hidden layer의 가능한 모든 이진 상태를 나타내는 듯함 
 
 ### 2. Gaussian Units
 - real-valued data를 다루기 위해 binary visible unit을 independent Gaussian noise를 가진 linear unit으로 대체함
 - 이렇게 대체하여도 기존의 학습 방식인 Contrastive Divergence(이하 CD)를 사용할 수 있는지에 관해서는 exponential family harmoniums에서 CD가 잘 작동한다는 것을 보여주는 [Exponential Family Harmoniums with an Application to Information Retrieval](https://papers.nips.cc/paper_files/paper/2004/hash/0e900ad84f63618452210ab8baae0218-Abstract.html)에 잘 나와있음
     
-- linear unit으로 대체한 RBM의 에너지는 다음과 같음
-$$E(\bold{v},\bold{h})=\sum\limits_{i\in vis}{\frac{(v_i-b_i)^2}{2\sigma_i^2}}-\sum\limits_{j\in hid}{b_jh_j}-\sum\limits_{i,j}{\frac{v_i}{\sigma_i}h_jw_{ij}}$$ ($\sigma_i$는 visble unit $i$에 대한 Gaussian noise의 표준편차임)
-- $\sum\limits_{i\in vis}{\frac{(v_i-b_i)^2}{2\sigma_i^2}}$는  $-\sum\limits_{i\in vis}{\ln{e^{-\frac{(v_i-b_i)^2}{2\sigma_i^2}}}}$로 Gaussian distribution에 로그를 취한 형태임. 이는 visible unit이 Gaussian distribution을 따르도록 함
+- linear unit으로 대체한 RBM의 에너지는 $$E(\mathbf{v},\mathbf{h})=\sum\limits_{i\in vis}{\frac{(v_i-b_i)^2}{2\sigma_i^2}}-\sum\limits_{j\in hid}{b_jh_j}-\sum\limits_{i,j}{\frac{v_i}{\sigma_i}h_jw_{ij}}$$ ($\sigma_i$는 visble unit $i$에 대한 Gaussian noise의 표준편차임)
+- 에너지의 첫째항 $\sum\limits_{i\in vis}{\frac{(v_i-b_i)^2}{2\sigma_i^2}}$는  $-\sum\limits_{i\in vis}{\ln{e^{-\frac{(v_i-b_i)^2}{2\sigma_i^2}}}}$로 Gaussian distribution에 로그를 취한 형태임. 이는 visible unit이 Gaussian distribution을 따르도록 함
 
 - $\sigma_i$를 학습시키는 것이 가능하긴 하지만 binary hidden unit으로는 어려움([Geoffry hinton 강의 참고](https://www.youtube.com/watch?v=SnbfQwJLNk8))
 - 따라서 데이터를 평균이 0, 분산이 단위 분산이 되도록 nomalize하고, reconstruction시에  $\sigma_i^2$이 1이 되도록 하여 noise-free reconstruction을 사용함
-- $v_i$는 N($\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i,\sigma_i^2)$에서  N($\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i,1)$로 변함. 따라서 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$이 됨
-- $P(h_j=1) = \sigma(\frac{v_i-\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}-b_i}{\sigma_i})$ ($\sigma()$은 sigmoid 함수)
+
+- 그러면 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
+
 ## Rectified Linear Units
-- hidden unit에서도 똑같이 binary unit의 $N$개의 복제본을 만들어 표현할 수 있지만 다음과 같은 문제가 있음
+- hidden unit에서 더 많은 정보를 표현하기 위해 binomial unit을 도입함 (N개의 같은 가중치와 편향을 공유하는 binary unit을 합친 것으로 볼 수 있음)
+- $N$개의 binary unit에 대해서 각각 연산을 진행할 수도 있겠지만, 이는 computational and implementational 관점에서 비효율적이므로, $N$개의 binary unit을 합친 binomial unit으로 대체함
+- binary unit의 $N$개가 있는 것과 같으므로 기존의 learning 및 inference 방법에서 바뀌지 않음
+- $N$개의 binary unit이 켜질 확률이 $p$로 같으므로, 켜지는 binary units의 평균은 $Np$, 분산은 $Np(1-p)$임
+- 하지만 여기에서 binomial unit의 문제가 드러남
 > **문제점**
 N개의 복사본 중에서 켜지는 unit의 평균은 $Np$이고, 분산은 $Np(1-p)$이다. p가 1에 가까워지면 대부분의 unit들이 항상 켜지게 되어 분산이 작아진다. 이는 모델이 충분한 정보를 표현하지 못하도록 하기 때문에 문제가 있다. $p$가 작으면 Poisson unit처럼 행동한다. 이는 약간의 증가만으로도 exponentially하게 값이 증가하게 되므로 learning을 불안정하게 만든다.
 
-픽셀의 값이 $n\in[0,10]$ ($n$은 정수)라고 하자. binary 값이 아닌 실수 값을 표현하기 위해 visible unit $i$와 10개의 같은 가중치와 편향을 공유하는 복제본을 생성하면, 각 복제본이 켜질 확률은 $p(v_i=1)$ (이하 $p_i$)이다. computation과 implementation의 측면에서 각각의 복제본들에 대해서 켜질 것인지 말 것인지를 계산하는 것은 비효율적이다. 따라서 10개의 unit 중 n개의 unit이 켜질 확률을 구하면 이 확률은 ${10 \choose n}p_i^n(1-p_i)^{10-n}$의 binomial distribution을 따를 것이다. 이 이항분포의 평균은 $10p_i$이므로, $10p_i$에 작은 Gaussian noise를 추가하면 켜지는 unit의 개수인 n을 근사할 수 있다.
+- 이 문제를 해결하기 위해 Stepped Sigmoid Units(SSU)를 도입함
+> **Stepped Sigmoid Unit(SSU)**
+SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복제하고, 이 복제본들에 각각 다르고 고정된 offset(ex. -0.5, -1.5, -2.5 ...)을 준 것을 의미한다. 그렇게 되면 hidden unit이 켜질 확률은 $\sigma(\mathbf{v}\mathbf{w}^T+b-i+0.5)$ ($\sigma()$는 sigmoid함수)이 된다. 따라서 모든 복제본들의 전체 활성도(각각의 복제본이 켜질 확률의 합)은 $\sum\limits_{i=1}^N\sigma(\mathbf{v}\mathbf{w}^T+b-i+0.5)$이 되고, 이는 $\log(1+e^{\mathbf{v}\mathbf{w}^T+b})$로 근사할 수 있다. SSU는 일반적인 binary unit보다 더 많은 parameter를 필요로 하지 않으면서, 더 많이 표현할 수 있다.
+
+- 하지만 SSU는 활성도를 정확하게 샘플링하기 위해서 logistic sigmoid 함수를 여러 번 불러야 함
+- 이를 해결하기 위해서 logistic sigmoid 함수의 빠른 근사인 Noisy Rectified Linear Unit(NReLU, $\max(0, x+N(0,\sigma(x)))$)를 사용함
+
 ## Intensity Equivariance
 
 ## Empirical Evaluation
