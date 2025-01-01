@@ -59,6 +59,7 @@ $$E(\bold{v},\bold{h})=\sum\limits_{i\in vis}{\frac{(v_i-b_i)^2}{2\sigma_i^2}}-\
 - $\sigma_i$를 학습시키는 것이 가능하긴 하지만 binary hidden unit으로는 어려움([Geoffry hinton 강의 참고](https://www.youtube.com/watch?v=SnbfQwJLNk8))
 - 따라서 데이터를 평균이 0, 분산이 단위 분산이 되도록 nomalize하고, reconstruction시에  $\sigma_i^2$이 1이 되도록 하여 noise-free reconstruction을 사용함
 - $v_i$는 N($\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i,\sigma_i^2)$에서  N($\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i,1)$로 변함. 따라서 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$이 됨
+- $P(h_j=1) = \sigma(\frac{v_i-\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}-b_i}{\sigma_i})$ ($\sigma()$은 sigmoid 함수)
 ## Rectified Linear Units
 - hidden unit에서도 똑같이 binary unit의 $N$개의 복제본을 만들어 표현할 수 있지만 다음과 같은 문제가 있음
 > **문제점**
