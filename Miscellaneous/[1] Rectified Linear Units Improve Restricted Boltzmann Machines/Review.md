@@ -89,9 +89,68 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 - Jittered-Cluttered NORM 데이터셋에 대한 객체 인식과 Labeled Faces in the Wild 데이터셋에 대한 face verification을 binary hidden unit과 NReLU에 대해서 각각 평가를 진행함
 - 두 데이터셋 모두 binary hidden unit보다 NReLU가 더 뛰어난 성능을 보임
 ## Jittered-Cluttered NORB
+- NORB는 3D 객체 인식용 합성 데이터셋으로, 5개의 객체 클래스(인간, 동물, 자동차, 비행기, 트럭)로 구성됨
+- Jittered-Cluttered 버전의 NORB는 배경에 잡음이 포함되고, 객체의 위치, 크기, 밝기 등이 무작위로 변형됨
+- 각 클래스에 대해서 10개의 인스턴스가 있으며, 5개는 학습용, 5개는 시험용임
+- 5개의 클래스에 더하여, 중앙에 객체가 없이 배경만 있는 6번째 클래스가 있음
+<center>
+	<figure>
+		<img  src="https://velog.velcdn.com/images/bsj2061/post/15895fb4-0d3f-479f-9e71-d24936e30d5a/image.png"  width="400"  height="400"/>
+			<figcaption>
+				<font size=2>
+					[그림 2] Jittered-Cluttered NORB의 예시
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
+### 1. Training
+- 이미지들을 $108\times108\times2$에서 $32\times32\times2$의 해상도로 다운샘플링하고, 이를 정규화함(zero-mean이 되도록하고, 모든 training 이미지에 있는 pixel의 표준편차의 평균으로 나눠줌) 
+- CD를 사용하여 두 개의 feature 레이어를 사전학습시킴
+- 가장 상위의 hidden layer에서 다항 회귀를 사용하여 label을 예측하고, 분류기의 모든 parameter들을 fine-tuning함
+<center>
+	<figure>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/f647808d-ad4c-4da1-bcd3-0ae2f788b990/image.png"  width="400"  height="400"/>
+			<figcaption>
+				<font size=2>
+					[그림 3] Jittered-Cluttered NORB 데이터셋에 대한 네트워크 구조
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
+- 첫번째 hidden layer에 1000, 2000, 4000개의 units, 두번째 hidden layer에 1000, 2000개의 units으로 실험해본 결과, unit의 수가 많을수록 더 정확한 분류 결과를 얻었음
+- visible unit은 모두 Gaussian unit이며, hidden unit은 NReLU, stochastic binary unit에 대해서 모두 실험을 진행함
+### 2. Classification Results
 
+
+<center>
+	<figure>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/e8f52f03-a048-4a15-8ade-4f75c885d166/image.png"  width="200"  height="200"/>
+			<figcaption>
+				<font size=2>
+					[표 1] Test error rates for classifiers with 4000 hidden units trained on 32x32x2 Jittered-Cluttered NORB images
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
+
+<center>
+	<figure>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/1e5885be-116c-4fa5-9068-cad1b7421336/image.png"  width="200"  height="200"/>
+			<figcaption>
+				<font size=2>
+					[표 2] Jittered-Cluttered NORB 데이터셋에 대한 네트워크 구조
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
 ## Labeled Faces in the Wild
-
+### 1. Network Architecture
+### 2. Training
+### 3. Classification Results
 ## Mixtures of Exponentially Many Linear Models
 
 ## Summary
