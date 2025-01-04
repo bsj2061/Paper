@@ -58,7 +58,7 @@ $$p(\mathbf{v}) = \frac{\sum\limits_{\mathbf{h}}e^{-E(\mathbf{v},\mathbf{h})}}{\
 - $\sigma_i$를 학습시키는 것이 가능하긴 하지만 binary hidden unit으로는 어려움([Geoffry hinton 강의 참고](https://www.youtube.com/watch?v=SnbfQwJLNk8))
 - 따라서 데이터를 평균이 0, 분산이 단위 분산이 되도록 nomalize하고, reconstruction시에  $\sigma_i^2$이 1이 되도록 하여 noise-free reconstruction을 사용함
 
-- 그러면 $v_i = \sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
+- 그러면 $v_i=\sum\limits_{j\in hid}\mathbf{h}_j\mathbf{w}_{ij}+\mathbf{b}_i$
 
 ## Rectified Linear Units
 - hidden unit에서 더 많은 정보를 표현하기 위해 binomial unit을 도입함 (N개의 같은 가중치와 편향을 공유하는 binary unit을 합친 것으로 볼 수 있음)
@@ -93,6 +93,7 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 - Jittered-Cluttered 버전의 NORB는 배경에 잡음이 포함되고, 객체의 위치, 크기, 밝기 등이 무작위로 변형됨
 - 각 클래스에 대해서 10개의 인스턴스가 있으며, 5개는 학습용, 5개는 시험용임
 - 5개의 클래스에 더하여, 중앙에 객체가 없이 배경만 있는 6번째 클래스가 있음
+
 <center>
 	<figure>
 		<img  src="https://velog.velcdn.com/images/bsj2061/post/15895fb4-0d3f-479f-9e71-d24936e30d5a/image.png"  width="400"  height="400"/>
@@ -104,13 +105,15 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 	</figure>
 </center>
 <br></br>
+
 ### 1. Training
 - 이미지들을 $108\times108\times2$에서 $32\times32\times2$의 해상도로 다운샘플링하고, 이를 정규화함(zero-mean이 되도록하고, 모든 training 이미지에 있는 pixel의 표준편차의 평균으로 나눠줌) 
 - CD를 사용하여 두 개의 feature 레이어를 사전학습시킴
 - 가장 상위의 hidden layer에서 다항 회귀를 사용하여 label을 예측하고, 분류기의 모든 parameter들을 fine-tuning함
+
 <center>
 	<figure>
-		<img  src= "https://velog.velcdn.com/images/bsj2061/post/f647808d-ad4c-4da1-bcd3-0ae2f788b990/image.png"  width="400"  height="400"/>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/f647808d-ad4c-4da1-bcd3-0ae2f788b990/image.png"  width="300"  height="300"/>
 			<figcaption>
 				<font size=2>
 					[그림 3] Jittered-Cluttered NORB 데이터셋에 대한 네트워크 구조
@@ -119,17 +122,19 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 	</figure>
 </center>
 <br></br>
+
 - 첫번째 hidden layer에 1000, 2000, 4000개의 units, 두번째 hidden layer에 1000, 2000개의 units으로 실험해본 결과, unit의 수가 많을수록 더 정확한 분류 결과를 얻었음
 - visible unit은 모두 Gaussian unit이며, hidden unit은 NReLU, stochastic binary unit에 대해서 모두 실험을 진행함
+
 ### 2. Classification Results
-
+- 그 결과는 아래의 표와 같음
 
 <center>
 	<figure>
-		<img  src= "https://velog.velcdn.com/images/bsj2061/post/e8f52f03-a048-4a15-8ade-4f75c885d166/image.png"  width="200"  height="200"/>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/e8f52f03-a048-4a15-8ade-4f75c885d166/image.png"  width="200"  height="100"/>
 			<figcaption>
 				<font size=2>
-					[표 1] Test error rates for classifiers with 4000 hidden units trained on 32x32x2 Jittered-Cluttered NORB images
+					[표 1] Test error rates for classifiers with 4000 hidden units trained on 32x32x2 Jittered-Cluttered NORB images.
 				</font>
 		</figcaption>
 	</figure>
@@ -138,17 +143,35 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 
 <center>
 	<figure>
-		<img  src= "https://velog.velcdn.com/images/bsj2061/post/1e5885be-116c-4fa5-9068-cad1b7421336/image.png"  width="200"  height="200"/>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/1e5885be-116c-4fa5-9068-cad1b7421336/image.png"  width="200"  height="170"/>
 			<figcaption>
 				<font size=2>
-					[표 2] Jittered-Cluttered NORB 데이터셋에 대한 네트워크 구조
+					[표 2] Test error rates for classifier with two hidden layers (4000 units in the first, 2000 in the second), trained on 32x32x2 Jittered-Cluttered NORB images.
 				</font>
 		</figcaption>
 	</figure>
 </center>
 <br></br>
+
+- 모든 결과에서 Binary보다 NReLU가 더 좋은 분류 결과를 보임
+
 ## Labeled Faces in the Wild
+- 두 개의 얼굴 이미지가 주어지고, 이 두 얼굴이 같은지 다른지 예측하는 작업
+
+<center>
+	<figure>
+		<img  src="https://velog.velcdn.com/images/bsj2061/post/b08fec77-0304-4a29-8628-4b0aa6cd6c9f/image.png"  width="350  height="350"/>
+			<figcaption>
+				<font size=2>
+					[그림 2] Jittered-Cluttered NORB의 예시
+				</font>
+		</figcaption>
+	</figure>
+</center>
+
+
 ### 1. Network Architecture
+                                                                                                                                         
 ### 2. Training
 ### 3. Classification Results
 ## Mixtures of Exponentially Many Linear Models
