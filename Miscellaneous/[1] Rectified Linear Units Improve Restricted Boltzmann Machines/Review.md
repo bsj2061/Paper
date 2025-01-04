@@ -155,25 +155,72 @@ SSU는 같은 가중치와 편향을 공유하는 binary unit을 무한개 복�
 
 - 모든 결과에서 Binary보다 NReLU가 더 좋은 분류 결과를 보임
 
-## Labeled Faces in the Wild
+## Labeled Faces in the Wild(LFW)
 - 두 개의 얼굴 이미지가 주어지고, 이 두 얼굴이 같은지 다른지 예측하는 작업
-
 <center>
 	<figure>
-		<img  src="https://velog.velcdn.com/images/bsj2061/post/b08fec77-0304-4a29-8628-4b0aa6cd6c9f/image.png"  width="350  height="350"/>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/b08fec77-0304-4a29-8628-4b0aa6cd6c9f/image.png"  width="340"  height="170"/>
 			<figcaption>
 				<font size=2>
-					[그림 2] Jittered-Cluttered NORB의 예시
+					[그림 4] Labeled Faces in the Wild dataset의 예시 
 				</font>
 		</figcaption>
 	</figure>
 </center>
-
-
-### 1. Network Architecture
+<br></br>
                                                                                                                                          
-### 2. Training
-### 3. Classification Results
-## Mixtures of Exponentially Many Linear Models
+### 1. Network Architecture
+- 이 task는 두 개의 input을 받는데, 두 input을 합치면 이진 분류의 결과가 합치는 순서에 의존하게 됨
+- 따라서 symmetric한 분류기를 만들기 위해 siamese architecture를 사용함
+- 하나의 얼굴 사진에 대한 feature를 계산하는 함수를 학습시킴(feature extractor)
+- 두 얼굴 사진이 주어지면 각각의 사진에 대해서 feature extractor로 feature를 계산하고, 두 feature들을 cosine similarity와 같이 input의 순서에 invariant한 연산을 적용하여 하나의 representation으로 합침
+- feature extractor가 equivariant하도록 하기 위해 hidden layer에 편향을 사용하지 않음
+<center>
+	<figure>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/6cfd4635-864c-4288-99ba-6390a8004f82/image.png"  width="200"  height="300"/>
+			<figcaption>
+				<font size=2>
+					[그림 5] Siamese network used for the Labeled Faces in the Wild task.
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
 
-## Summary
+
+
+### 2. Training
+- LFW는 $250\times250$ $( \times 3$ channels$)$의 크기를 가지고 있지만, 배경정보를 막기위해 중앙의 $144\times144$ $( \times 3$ channels$)$ 크기의 이미지만을 사용함
+- 이 이미지를 회전시키고 크기를 조정해서 모든 이미지에서 눈의 좌표를 일치시킴
+- 이후 $32\times32$ $( \times 3$ channels$)$로 다운샘플링하고, 이를 정규화함(Jittered-Cluttered NORB에서와 동일)
+- RBM으로 feature distractor를 사전학습시키고, [그림 5]에 나와있듯이 이를 Siamese architecture에 넣고, 두 얼굴 사진에 대해서 parameter들을 fine-tuning함
+- Jittered-Cluttered NORB에서처럼 RBM의 visible unit은 Gaussian unit을, hidden unit은 NReLU와 Stochastic Binary Unit을 모두 사용함
+
+### 3. Classification Results
+- 그 결과는 [표 3]과 같음
+<center>
+	<figure>
+		<img  src= "https://velog.velcdn.com/images/bsj2061/post/5e519459-377d-4f51-ab5a-c32235a6a36d/image.png"  width="350"/>
+			<figcaption>
+				<font size=2>
+					[표 3] Accuracy on the LFW task for various models trained on 32x32 color images.
+				</font>
+		</figcaption>
+	</figure>
+</center>
+<br></br>
+
+## Mixtures of Exponentially Many Linear Models
+- 기존에 real-valued, high-dimensional data의 density를 모델링하기 위해서 a mixture of diagonal Gaussians나 a mixture of factor analysis 방식을 사용했지만, 이 방식들은 데이터가 componential structure를 포함하면 exponentially inefficient함 ( 독립적인 숫자들로 이루어진 이미지 쌍을 생각해보자. 하나의 이미지에 대한 혼합 모델(mixture model)이 $N$개의 component를 필요로 한다면, 이미지 쌍은 $N^2$의 component를 필요로 한다. 즉, component가 지수적으로 증가한다.)
+- 반면 NReLU는 잠재 변수(latent variable)에 대해서는 선형적으로, parameter에 대해서는 이차적(quadratic)적으로 증가함
+
+
+## 느낀점
+수학적인 기초나 이전 연구에 대한 이해가 부족한 상태에서 이 논문을 읽으니 어렵게 느껴졌다. 연속적인 값을 다루기 위해 linear unit with independent Gaussian noise를 사용한다거나 N개의 binary unit들을 binomial unit으로 생각한다거나 SSU가 NReLU로 approximate된다는 것 등 그냥 읽으면 읽히긴 하지만 왜 이게 성립하고, 왜 이렇게 되는지에 대해서 꼼꼼하게 살펴보다보면 점점 머리가 아파왔다. 그래도 기초가 부족한만큼 이 논문을 읽으면서 모든 문장을 당연하게 넘어가지 않고 주로 '왜?'라는 질문을 던지며 읽으려고 노력했다. 그 결과로 아래의 논문들을 읽어보게 되었다.
+> - Welling, Max, Michal Rosen-Zvi and Geoffrey E. Hinton. “[Exponential Family Harmoniums with an Application to Information Retrieval.](https://papers.nips.cc/paper_files/paper/2004/file/0e900ad84f63618452210ab8baae0218-Paper.pdf)” Neural Information Processing Systems (2004).
+- G. E. Hinton, R. R. Salakhutdinov ,[Reducing the Dimensionality of Data with Neural Networks.](https://www.cs.toronto.edu/~hinton/absps/science.pdf)Science313,504-507(2006).DOI:10.1126/science.1127647
+- Yoav Freund and David Haussler. 1991. [Unsupervised learning of distributions on binary vectors using two layer networks.](https://proceedings.nips.cc/paper/1991/file/33e8075e9970de0cfea955afd4644bb2-Paper.pdf) In Proceedings of the 5th International Conference on Neural Information Processing Systems (NIPS'91). Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 912–919.
+- Hinton, Geoffrey. (2002). ARTICLE [Training Products of Experts by Minimizing Contrastive Divergence.](https://www.cs.toronto.edu/~fritz/absps/tr00-004.pdf) Neural computation. 14. 1771-800. 10.1162/089976602760128018. 
+- Marks, Tim & Movellan, Javier. (2001). [Diffusion Networks, Products of Experts, and Factor Analysis.](https://inc.ucsd.edu/mplab/68/media/mplab2001.02.pdf)
+
+이 외에도 많은 논문과 자료들을 찾아보며 깊은 이해를 하려고 노력했다. 이렇게까지 논문을 오랫동안 꼼꼼하게 읽어본 경험이 처음이라서 새롭기도 하면서, 추상적으로만 느껴지던 논문이 점점 머릿속에서 구체화되면서 흥미를 느꼈던 것 같다. 모든 논문을 이렇게 읽는 것은 힘들겠지만, 앞으로도 기초가 부족한 분야의 논문에 대해서는 이렇게 읽어볼 예정이다. 그리고 간단하게 생긴 ReLU에 이렇게 많은 수학적인 지식들이 내포되어있다는 사실이 놀라웠다.
